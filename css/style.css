@@ -1,0 +1,73 @@
+/* 复制之前所有的样式代码，这里不再赘述，请把上一版 <style> 里的所有内容原样复制到这里 */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6f8; color: #222; }
+.topbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; padding: 0 12px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.08); z-index: 100; }
+.menu-btn { width: 40px; height: 40px; border: none; background: transparent; font-size: 22px; cursor: pointer; border-radius: 8px; }
+.menu-btn:active { background: #eee; }
+.topbar h1 { font-size: 17px; margin: 0 0 0 8px; font-weight: 600; }
+
+.sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: #fff; transform: translateX(-100%); transition: transform .25s ease; z-index: 300; display: flex; flex-direction: column; box-shadow: 2px 0 12px rgba(0,0,0,.1); padding-top: env(safe-area-inset-top); }
+.sidebar.open { transform: translateX(0); }
+.sidebar-header { padding: 20px 20px 8px; font-size: 12px; color: #999; letter-spacing: 1px; }
+.nav-list { flex: 1; overflow-y: auto; padding: 0 8px 20px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-radius: 10px; font-size: 15px; cursor: pointer; }
+.nav-item:active { background: #f0f0f3; }
+.nav-item.active { background: #eef2ff; color: #3b5bdb; font-weight: 600; }
+.nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); opacity: 0; visibility: hidden; transition: .25s; z-index: 200; }
+.overlay.show { opacity: 1; visibility: visible; }
+.content { padding: calc(72px + env(safe-area-inset-top)) 16px 40px; min-height: 100vh; }
+
+.tabs { display: flex; background: #fff; border-radius: 10px; padding: 4px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.tab { flex: 1; border: none; background: transparent; padding: 10px 0; font-size: 13px; color: #666; border-radius: 8px; cursor: pointer; }
+.tab.active { background: #3b5bdb; color: #fff; font-weight: 600; }
+
+.section-title { font-size: 15px; font-weight: 600; margin: 22px 0 10px; }
+.section-title:first-child { margin-top: 0; }
+
+.list { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #f0f0f2; }
+.row:last-child { border-bottom: none; }
+.row .name { font-size: 15px; }
+.row .grow { flex: 1; min-width: 0; }
+.row .val { width: 60px; text-align: right; border: 1px solid #e0e0e4; border-radius: 8px; padding: 6px 8px; font-size: 15px; background: #fafafa; }
+.row .val:focus { outline: none; border-color: #3b5bdb; background: #fff; }
+.del { border: none; background: transparent; color: #c8c8d0; font-size: 20px; cursor: pointer; padding: 2px 6px; line-height: 1; }
+.del:active { color: #e03131; }
+.empty { padding: 22px; text-align: center; color: #aaa; font-size: 14px; }
+
+.card { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+.card h3 { margin: 0 0 12px; font-size: 16px; }
+
+.inp { width: 100%; border: 1px solid #e0e0e4; border-radius: 8px; padding: 10px; font-size: 15px; background: #fff; }
+.inp:focus { outline: none; border-color: #3b5bdb; }
+.sel { flex: 1; min-width: 0; border: 1px solid #e0e0e4; border-radius: 8px; padding: 9px 10px; font-size: 14px; background: #fff; }
+.sel:focus { outline: none; border-color: #3b5bdb; }
+
+.btn { flex: 1; border: none; background: #3b5bdb; color: #fff; border-radius: 8px; padding: 10px; font-size: 14px; cursor: pointer; }
+.btn:active { opacity: .85; }
+.btn.ghost { background: #f1f3f5; color: #495057; }
+.btn.gold { background: #f59f00; }
+.mini { border: none; background: #f1f3f5; color: #495057; border-radius: 8px; padding: 9px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+
+.badge { font-size: 12px; padding: 3px 9px; border-radius: 20px; background: #eef2ff; color: #3b5bdb; white-space: nowrap; }
+.badge.warn { background: #fff4e6; color: #e8590c; }
+.badge.over { background: #f1f3f5; color: #adb5bd; }
+.badge.green { background: #ebfbee; color: #2f9e44; }
+.badge.gold { background: #fff9db; color: #b8860b; }
+.badge.pink { background: #fff0f6; color: #d6336c; }
+.sub { font-size: 12px; color: #999; margin-top: 3px; }
+
+.stats { display: flex; gap: 10px; margin-bottom: 14px; }
+.stat { flex: 1; background: #fff; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.stat .num { font-size: 20px; font-weight: 700; color: #3b5bdb; }
+.stat .lbl { font-size: 12px; color: #999; margin-top: 4px; }
+
+.hide { display: none !important; }
+.group-title { font-size: 13px; color: #666; font-weight: 600; padding: 16px 4px 8px; }
+.group-title:first-child { padding-top: 0; }
+.add-form { display: flex; gap: 8px; margin-top: 10px; }
+.add-form input { flex: 1; min-width: 0; border: 1px solid #e0e0e4; border-radius: 8px; padding: 9px 10px; font-size: 14px; background: #fff; }
+.add-form button { border: none; background: #3b5bdb; color: #fff; border-radius: 8px; padding: 9px 18px; font-size: 14px; cursor: pointer; }
