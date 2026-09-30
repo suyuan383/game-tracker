@@ -12,7 +12,9 @@
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 </head>
 <body>
-
+<div id="splash-screen">
+  <img src="./icons/splash.jpg" alt="启动画面">
+</div>
 <header class="topbar">
   <button class="menu-btn" id="menuBtn">☰</button>
   <h1 id="pageTitle">主页</h1>
@@ -43,6 +45,35 @@
 <script src="js/views_yemu.js"></script>
 <script src="js/views_daihaoyuan.js"></script>  <!-- 新增 -->
 <script src="js/main.js"></script>
+<!-- 启动画面控制 -->
+<script>
+(function(){
+  const splash = document.getElementById('splash-screen');
+  if (!splash) return;
 
+  const img = splash.querySelector('img');
+  const startTime = Date.now();
+  const MIN_SHOW = 1500;   // 至少显示 1.5 秒
+
+  function hide(){
+    const elapsed = Date.now() - startTime;
+    const wait = Math.max(0, MIN_SHOW - elapsed);
+    setTimeout(() => {
+      splash.classList.add('hide');
+      setTimeout(() => splash.remove(), 600);
+    }, wait);
+  }
+
+  // 图片已缓存的情况
+  if (img && img.complete) {
+    hide();
+  } else if (img) {
+    img.addEventListener('load', hide);
+    img.addEventListener('error', hide);  // 图挂了也别卡住
+  } else {
+    hide();
+  }
+})();
+</script>
 </body>
 </html>
