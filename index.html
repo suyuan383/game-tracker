@@ -51,25 +51,30 @@
   const splash = document.getElementById('splash-screen');
   if (!splash) return;
 
+  // 锁住页面滚动
+  document.body.style.overflow = 'hidden';
+
   const img = splash.querySelector('img');
   const startTime = Date.now();
-  const MIN_SHOW = 1500;   // 至少显示 1.5 秒
+  const MIN_SHOW = 1500;
 
   function hide(){
     const elapsed = Date.now() - startTime;
     const wait = Math.max(0, MIN_SHOW - elapsed);
     setTimeout(() => {
       splash.classList.add('hide');
-      setTimeout(() => splash.remove(), 600);
+      setTimeout(() => {
+        splash.remove();
+        document.body.style.overflow = '';   // 恢复滚动
+      }, 600);
     }, wait);
   }
 
-  // 图片已缓存的情况
   if (img && img.complete) {
     hide();
   } else if (img) {
     img.addEventListener('load', hide);
-    img.addEventListener('error', hide);  // 图挂了也别卡住
+    img.addEventListener('error', hide);
   } else {
     hide();
   }
