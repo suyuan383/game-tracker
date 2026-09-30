@@ -51,12 +51,26 @@
   const splash = document.getElementById('splash-screen');
   if (!splash) return;
 
-  // 锁住页面滚动
-  document.body.style.overflow = 'hidden';
-
   const img = splash.querySelector('img');
   const startTime = Date.now();
   const MIN_SHOW = 1500;
+
+  // 关键：用 JS 给容器和图片设置真实高度
+  function fitScreen(){
+    const h = window.innerHeight;
+    const w = window.innerWidth;
+    splash.style.width  = w + 'px';
+    splash.style.height = h + 'px';
+    splash.style.top    = '0px';
+    splash.style.left   = '0px';
+  }
+
+  fitScreen();
+  window.addEventListener('resize', fitScreen);
+  window.addEventListener('orientationchange', () => setTimeout(fitScreen, 100));
+
+  // 锁住页面滚动
+  document.body.style.overflow = 'hidden';
 
   function hide(){
     const elapsed = Date.now() - startTime;
@@ -65,7 +79,7 @@
       splash.classList.add('hide');
       setTimeout(() => {
         splash.remove();
-        document.body.style.overflow = '';   // 恢复滚动
+        document.body.style.overflow = '';
       }, 600);
     }, wait);
   }
