@@ -7,6 +7,7 @@ function renderHome() {
     if (isGameHidden(g.id)) return;
     const d = getGame(g.id);
     (d.events || []).forEach(ev => {
+      if (ev.done) return;   // ★ 已完成的活动不上主页
       const endT = parseTime(ev.end);
       if (isNaN(endT)) return;
       if (endT < now) return;
@@ -30,6 +31,7 @@ function renderHome() {
               <div class="sub">${esc(u.game.name)} · 截止 ${fmtDT(u.ev.end)}</div>
             </div>
             <span class="badge ${u.info.urgent?'warn':''}">${u.info.text}</span>
+            <button class="btn-mini" data-act="toggleEvDone" data-id="${u.ev.id}" data-game="${u.game.id}">完成</button>
           </div>`).join('')}
       </div>` : `<div class="list"><div class="empty">暂无进行中的活动</div></div>`}
   `;

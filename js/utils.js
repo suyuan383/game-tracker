@@ -52,12 +52,16 @@ function renderCommonEventTab(d) {
   else if (evFilterStatus === 'ended')    filtered = enriched.filter(e => e._st === 'ended');
 
   filtered.sort((a, b) => {
+    // 已完成的沉到最下面
+    const da = a.done ? 1 : 0;
+    const db = b.done ? 1 : 0;
+    if (da !== db) return da - db;
+
     if (evFilterStatus === 'ended') return (b.end || '').localeCompare(a.end || '');
     const ka = a._st === 'upcoming' ? (a.start || '') : (a.end || '');
     const kb = b._st === 'upcoming' ? (b.start || '') : (b.end || '');
     return ka.localeCompare(kb);
   });
-
   const tabsHtml = `
     <div class="tabs" style="margin-bottom:12px">
       ${[['all','全部'],['ongoing','进行中'],['upcoming','未开始'],['ended','已结束']].map(([k,l]) =>
@@ -82,6 +86,21 @@ function renderCommonEventTab(d) {
 }
 
 function renderEventRow(ev) {
+  // ===== 已完成：灰化 + 撤销按钮，不显示倒计时 =====
+  if (ev.done) {
+    return `
+      <div class="row ev-done">
+        <div class="grow">
+          <div class="name"><s>${esc(ev.name)}</s></div>
+          <div class="sub">${fmtDT(ev.start)}${ev.start && ev.end ? ' → ' : ''}${fmtDT(ev.end)}</div>
+        </div>
+        <span class="badge" style="background:#f1f3f5;color:#868e96">已完成</span>
+        <button class="btn-mini ghost" data-act="toggleEvDone" data-id="${ev.id}">撤销</button>
+        <button class="del" data-act="delEv" data-id="${ev.id}">×</button>
+      </div>`;
+  }
+
+  // ===== 未完成：正常倒计时 + 完成按钮 =====
   let badge = '';
   if (ev._st === 'ended') {
     badge = `<span class="badge over">已结束</span>`;
@@ -97,6 +116,7 @@ function renderEventRow(ev) {
         <div class="sub">${fmtDT(ev.start)}${ev.start && ev.end ? ' → ' : ''}${fmtDT(ev.end)}</div>
       </div>
       ${badge}
+      <button class="btn-mini" data-act="toggleEvDone" data-id="${ev.id}">完成</button>
       <button class="del" data-act="delEv" data-id="${ev.id}">×</button>
     </div>`;
 }

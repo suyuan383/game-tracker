@@ -73,8 +73,12 @@ content.addEventListener('click', e => {
     if (actEl) t = actEl;
   }
 
-  const goto = t.closest('[data-goto]'); if (goto) { location.hash = goto.dataset.goto; return; }
-  const act = t.dataset.act; 
+  // ★ 只有点的地方没有 data-act 时，才走 data-goto 跳转
+  if (!t.dataset.act) {
+    const goto = t.closest('[data-goto]');
+    if (goto) { location.hash = goto.dataset.goto; return; }
+  }
+  const act = t.dataset.act;
      // 活动筛选
   if (t.dataset.evFilter) {
     evFilterStatus = t.dataset.evFilter;
@@ -108,6 +112,17 @@ content.addEventListener('click', e => {
     }
     case 'delRes': { if (!confirm('删除？')) return; d.resources = d.resources.filter(r => r.id !== t.dataset.id); saveDB(); render(false); break; }
     case 'addEv': { const nameEl = document.getElementById('evName'); const startEl = document.getElementById('evStart'); const endEl = document.getElementById('evEnd'); const name = nameEl.value.trim(); if (!name) { nameEl.focus(); return; } d.events.push({ id: uid(), name, start: startEl.value, end: endEl.value }); saveDB(); render(false); break; }
+    case 'toggleEvDone': {
+      // 主页上按钮带 data-game；游戏页上没带，用当前游戏
+      const gameId = t.dataset.game || currentId();
+      const dg = getGame(gameId);
+      const ev = (dg.events || []).find(x => x.id === t.dataset.id);
+      if (!ev) break;
+      ev.done = !ev.done;
+      saveDB();
+      render(false);
+      break;
+    }
     case 'delEv': { if (!confirm('删除？')) return; d.events = d.events.filter(ev => ev.id !== t.dataset.id); saveDB(); render(false); break; }
 
     // ===== 资源 Bank =====
