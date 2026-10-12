@@ -277,7 +277,13 @@ function renderYearCardTab(d) {
   const count = (yc.records || []).length;
   const avg   = count ? Math.round(total / count) : 0;
   const purpleTotal = YEAR_CARD_INIT_PURPLE + total;   // 180 + 每周开出的
-
+  // 各档位次数统计
+  const tierCount = {};
+  YEAR_CARD_AMOUNTS.forEach(a => { tierCount[a] = 0; });
+  (yc.records || []).forEach(r => {
+    const a = +r.amount || 0;
+    if (tierCount[a] !== undefined) tierCount[a]++;
+  });
   // 年卡起止提示
   let dayInfo = '';
   if (yc.startDate) {
@@ -315,6 +321,18 @@ function renderYearCardTab(d) {
       <div class="stat"><div class="num" style="color:#3b5bdb">${YEAR_CARD_INIT_PAINT}</div><div class="lbl">颜料</div></div>
       <div class="stat"><div class="num">${count}</div><div class="lbl">已开次数</div></div>
       <div class="stat"><div class="num">${avg}</div><div class="lbl">平均每次</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">📊 档位统计</div>
+      <div style="display:flex;gap:8px">
+        ${YEAR_CARD_AMOUNTS.map(a => `
+          <div style="flex:1;text-align:center;padding:10px 4px;background:#f8f9fa;border-radius:8px">
+            <div style="font-size:18px;font-weight:700;color:${ycAmountColor(a)}">${tierCount[a]}</div>
+            <div style="font-size:11px;color:#868e96;margin-top:2px">${a} 档</div>
+          </div>
+        `).join('')}
+      </div>
     </div>
 
     <div class="card" style="margin-bottom:12px">
