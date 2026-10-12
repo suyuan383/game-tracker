@@ -16,7 +16,10 @@ function getGame(id) {
     if (!d.resourceBank) {
       d.resourceBank = { init: { purple: 0, red: 0, paint: 0 }, records: [] };
     }
-  } else if (id === 'bengtie') {
+    if (!d.yearlyCard) {
+      d.yearlyCard = { startDate: '', records: [] };
+    }
+  }else if (id === 'bengtie') {
     if (!d.resourceBank) {
       d.resourceBank = {
         init: { jade: 0, normalTicket: 0, specialTicket: 0, starlight: 0 },

@@ -401,6 +401,27 @@ content.addEventListener('click', e => {
 
     case 'addPay': { const itemEl = document.getElementById('payItem'); const amtEl = document.getElementById('payAmount'); const dateEl = document.getElementById('payDate'); const item = itemEl.value.trim(); const amount = +amtEl.value; if (!item) { itemEl.focus(); return; } if (!amount) { amtEl.focus(); return; } d.purchases.push({ id: uid(), item, amount, date: dateEl.value || todayStr(), note: '' }); saveDB(); render(false); break; }
     case 'delPay': { if (!confirm('删除？')) return; d.purchases = d.purchases.filter(p => p.id !== t.dataset.id); saveDB(); render(false); break; }
+    case 'addYearCardQuick': {
+      if (!d.yearlyCard) d.yearlyCard = { startDate: '', records: [] };
+      const amount = +t.dataset.amount || 0;
+      const dateEl = document.getElementById('ycDate');
+      const noteEl = document.getElementById('ycNote');
+      const date = (dateEl && dateEl.value) || todayStr();
+      const note = noteEl ? noteEl.value.trim() : '';
+      d.yearlyCard.records.push({ id: uid(), date, amount, note });
+      saveDB();
+      render(false);
+      break;
+    }
+    case 'delYearCard': {
+      if (!confirm('删除这条年卡记录？')) return;
+      if (d.yearlyCard) {
+        d.yearlyCard.records = d.yearlyCard.records.filter(r => r.id !== t.dataset.id);
+      }
+      saveDB();
+      render(false);
+      break;
+    }
   }
 });
 

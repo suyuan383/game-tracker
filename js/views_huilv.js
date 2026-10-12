@@ -1,11 +1,18 @@
 function renderHuilv() {
   const d = getGame(HUILV_ID);
-  const labels = [['res','💎 资源'], ['event','📅 活动'], ['gacha','🎴 抽卡'], ['pay','💰 充值']];
+  const labels = [
+    ['res','💎 资源'],
+    ['event','📅 活动'],
+    ['gacha','🎴 抽卡'],
+    ['pay','💰 充值'],
+    ['yearcard','🎫 年卡'],
+  ];
   let body = '';
-  if (currentTab === 'res')        body = renderResTab(d);
-  else if (currentTab === 'event') body = renderEventTab(d);
-  else if (currentTab === 'gacha') body = renderGachaTab(d);
-  else                             body = renderPayTab(d);
+  if (currentTab === 'res')           body = renderResTab(d);
+  else if (currentTab === 'event')    body = renderEventTab(d);
+  else if (currentTab === 'gacha')    body = renderGachaTab(d);
+  else if (currentTab === 'yearcard') body = renderYearCardTab(d);
+  else                                body = renderPayTab(d);
   return `<div class="tabs">${labels.map(([k, l]) => `<button class="tab ${currentTab===k?'active':''}" data-tab="${k}">${l}</button>`).join('')}</div>${body}`;
 }
 
@@ -245,5 +252,97 @@ function renderGame(id) {
     <div class="add-form" style="margin-top:8px">
       <button data-act="addEv">添加活动</button>
     </div>
+  `;
+}
+// ===================== 年卡 =====================
+const YEAR_CARD_INIT_PURPLE = 180;
+const YEAR_CARD_INIT_PAINT  = 10;
+const YEAR_CARD_AMOUNTS = [50, 98, 138, 200];
+
+function ycAmountColor(a) {
+  if (a >= 200) return '#e8590c';
+  if (a >= 138) return '#7048e8';
+  if (a >= 98)  return '#3b5bdb';
+  return '#2f9e44';
+}
+
+function renderYearCardTab(d) {
+  const yc = d.yearlyCard || { startDate: '', records: [] };
+  const records = [...(yc.records || [])].sort((a, b) => {
+    if ((a.date || '') !== (b.date || '')) return (b.date || '').localeCompare(a.date || '');
+    return (b.id || '').localeCompare(a.id || '');
+  });
+
+  const total = (yc.records || []).reduce((s, r) => s + (+r.amount || 0), 0);
+  const count = (yc.records || []).length;
+  const avg   = count ? Math.round(total / count) : 0;
+  const purpleTotal = YEAR_CARD_INIT_PURPLE + total;   // 180 + 每周开出的
+
+  // 年卡起止提示
+  let dayInfo = '';
+  if (yc.startDate) {
+    const startT = parseTime(yc.startDate);
+    if (!isNaN(startT)) {
+      const endT = startT + 365 * 24 * 3600 * 1000;
+      const daysLeft = Math.ceil((endT - Date.now()) / (24 * 3600 * 1000));
+      const ed = new Date(endT);
+      const endStr = `${ed.getFullYear()}-${String(ed.getMonth()+1).padStart(2,'0')}-${String(ed.getDate()).padStart(2,'0')}`;
+      dayInfo = daysLeft > 0
+        ? `<div style="margin-top:6px;font-size:12px;color:#868e96">到期日 ${endStr}，还剩 <b>${daysLeft}</b> 天</div>`
+        : `<div style="margin-top:6px;font-size:12px;color:#e03131">年卡已于 ${endStr} 到期</div>`;
+    }
+  }
+
+  const listHtml = records.length ? records.map(r => `
+    <div class="row">
+      <div class="grow">
+        <div class="name">${esc(r.date || '未填日期')}</div>
+        ${r.note ? `<div class="sub">${esc(r.note)}</div>` : ''}
+      </div>
+      <span style="font-weight:600;color:${ycAmountColor(+r.amount || 0)}">+${r.amount || 0}</span>
+      <button class="del" data-act="delYearCard" data-id="${r.id}">×</button>
+    </div>
+  `).join('') : `<div class="empty">还没有记录，点上面按钮记一笔</div>`;
+
+  const quickBtns = YEAR_CARD_AMOUNTS.map(a =>
+    `<button class="btn" data-act="addYearCardQuick" data-amount="${a}"
+             style="flex:1;background:${ycAmountColor(a)};padding:10px 4px;font-size:15px">+${a}</button>`
+  ).join('');
+
+  return `
+    <div class="stats">
+      <div class="stat"><div class="num" style="color:#7048e8">${purpleTotal}</div><div class="lbl">紫钻总额</div></div>
+      <div class="stat"><div class="num" style="color:#3b5bdb">${YEAR_CARD_INIT_PAINT}</div><div class="lbl">颜料</div></div>
+      <div class="stat"><div class="num">${count}</div><div class="lbl">已开次数</div></div>
+      <div class="stat"><div class="num">${avg}</div><div class="lbl">平均每次</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+            <div style="font-size:13px;color:#495057;line-height:1.7">
+        🎫 <b>购买时立刻到账</b>：180 紫钻 + 10 颜料<br>
+        📅 <b>每周开一次</b>：50 / 98 / 138 / 200 紫钻<br>
+        💰 <b>一年后</b>可全部提取
+        ${dayInfo}
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #dee2e6;font-size:12px;color:#868e96">
+        本周开出：<b style="color:#7048e8">${total}</b> 紫钻 ·
+        起始 180 + 累计 ${total} = 总额 <b style="color:#7048e8">${purpleTotal}</b>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">记一笔本周开出</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        ${quickBtns}
+      </div>
+      <input class="inp" id="ycDate" type="date" value="${todayStr()}">
+      <input class="inp" id="ycNote" placeholder="备注（可选）" style="margin-top:8px">
+      <div style="font-size:11px;color:#adb5bd;margin-top:6px">
+        直接点上面的金额按钮就记录，日期和备注可选填。
+      </div>
+    </div>
+
+    <div class="section-title">📋 历史记录（${count}）</div>
+    <div class="list">${listHtml}</div>
   `;
 }
