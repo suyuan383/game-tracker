@@ -342,9 +342,8 @@ function renderYearCardTab(d) {
         💰 <b>一年后</b>可全部提取
         ${dayInfo}
       </div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #dee2e6;font-size:12px;color:#868e96">
-        本周开出：<b style="color:#7048e8">${total}</b> 紫钻 ·
-        起始 180 + 累计 ${total} = 总额 <b style="color:#7048e8">${purpleTotal}</b>
+           <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #dee2e6;font-size:12px;color:#868e96">
+        180（购买赠送） + ${total}（累计开出）= <b style="color:#7048e8">${purpleTotal}</b>
       </div>
     </div>
 
