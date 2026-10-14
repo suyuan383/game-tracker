@@ -111,7 +111,31 @@ content.addEventListener('click', e => {
       break;
     }
     case 'delRes': { if (!confirm('删除？')) return; d.resources = d.resources.filter(r => r.id !== t.dataset.id); saveDB(); render(false); break; }
-    case 'addEv': { const nameEl = document.getElementById('evName'); const startEl = document.getElementById('evStart'); const endEl = document.getElementById('evEnd'); const name = nameEl.value.trim(); if (!name) { nameEl.focus(); return; } d.events.push({ id: uid(), name, start: startEl.value, end: endEl.value }); saveDB(); render(false); break; }
+    case 'addEv': {
+      const nameEl = document.getElementById('evName');
+      const name = nameEl.value.trim();
+      if (!name) { nameEl.focus(); return; }
+
+      // 日期 + 时 + 分 → 拼成 datetime-local 格式 YYYY-MM-DDTHH:MM
+      // 日期留空 → 整个时间视为空（活动可以是"无起止时间"）
+      const readDT = (prefix) => {
+        const dateEl = document.getElementById(prefix + 'Date');
+        if (!dateEl || !dateEl.value) return '';
+        const hEl = document.getElementById(prefix + 'Hour');
+        const mEl = document.getElementById(prefix + 'Min');
+        const h = (hEl && hEl.value) || '00';
+        const m = (mEl && mEl.value) || '00';
+        return `${dateEl.value}T${h}:${m}`;
+      };
+
+      const start = readDT('evStart');
+      const end   = readDT('evEnd');
+
+      d.events.push({ id: uid(), name, start, end });
+      saveDB();
+      render(false);
+      break;
+    }
     case 'toggleEvDone': {
       // 主页上按钮带 data-game；游戏页上没带，用当前游戏
       const gameId = t.dataset.game || currentId();

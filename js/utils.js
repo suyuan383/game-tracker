@@ -77,10 +77,39 @@ function renderCommonEventTab(d) {
     ${tabsHtml}
     <div class="list">${listHtml}</div>
     <div class="add-form" style="margin-top:12px"><input id="evName" placeholder="活动名称"></div>
-    <div class="add-form" style="margin-top:8px">
-      <input id="evStart" type="datetime-local">
-      <input id="evEnd" type="datetime-local">
+
+    <div class="add-form" style="margin-top:8px;gap:6px;align-items:center">
+      <span style="font-size:12px;color:#868e96;flex:0 0 32px">开始</span>
+      <input id="evStartDate" type="date" class="inp" style="flex:1.4;min-width:0">
+      <select id="evStartHour" class="inp" style="flex:0 0 62px">
+        ${Array.from({length:24},(_,i)=>{
+          const v = String(i).padStart(2,'0');
+          return `<option value="${v}"${i===0?' selected':''}>${v}</option>`;
+        }).join('')}
+      </select>
+      <select id="evStartMin" class="inp" style="flex:0 0 62px">
+        <option value="00" selected>00</option>
+        <option value="30">30</option>
+        <option value="59">59</option>
+      </select>
     </div>
+
+    <div class="add-form" style="margin-top:8px;gap:6px;align-items:center">
+      <span style="font-size:12px;color:#868e96;flex:0 0 32px">结束</span>
+      <input id="evEndDate" type="date" class="inp" style="flex:1.4;min-width:0">
+      <select id="evEndHour" class="inp" style="flex:0 0 62px">
+        ${Array.from({length:24},(_,i)=>{
+          const v = String(i).padStart(2,'0');
+          return `<option value="${v}"${i===0?' selected':''}>${v}</option>`;
+        }).join('')}
+      </select>
+      <select id="evEndMin" class="inp" style="flex:0 0 62px">
+        <option value="00" selected>00</option>
+        <option value="30">30</option>
+        <option value="59">59</option>
+      </select>
+    </div>
+
     <div class="add-form" style="margin-top:8px"><button data-act="addEv">添加活动</button></div>
   `;
 }
