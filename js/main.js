@@ -358,21 +358,21 @@ content.addEventListener('click', e => {
       input.click();
       break;
     }
-    // ===== 1. 解析 AI 文本 =====
+        // ===== 1. 解析 AI 文本 =====
     case 'aiParse': {
       const text = document.getElementById('aiTextArea').value.trim();
       if (!text) { alert('请先粘贴公告文本'); return; }
       
       // 判断游戏
       let defaultGameId = '';
-      if (/绘旅人|颜料|画灵|采风/.test(text)) defaultGameId = HUILV_ID;
-      else if (/星穹铁道|星琼|开拓者|专票/.test(text)) defaultGameId = BENGTIE_ID;
-      else if (/原神|原石|旅行者|纠缠之缘/.test(text)) defaultGameId = YUANSHEN_ID;
-      else if (/世界之外|侧影|晶石/.test(text)) defaultGameId = SHIJIE_ID;
-      else if (/未定|律师|晶片|左然|莫弈|陆景和|夏彦/.test(text)) defaultGameId = WEIDING_ID;
-      else if (/花亦山|学子|名士|金叶子/.test(text)) defaultGameId = HUAYISHAN_ID;
-      else if (/夜幕|夜行者|金砖|骰子/.test(text)) defaultGameId = YEMU_ID;
-      else if (/代号鸢|广陵王|殿下|白金/.test(text)) defaultGameId = DAIHAOYUAN_ID;
+      if (/绘旅人|颜料|画灵|采风|繪旅人|顏料|畫靈|採風/.test(text)) defaultGameId = HUILV_ID;
+      else if (/星穹铁道|星琼|开拓者|专票|星穹鐵道|星瓊|開拓者|專票/.test(text)) defaultGameId = BENGTIE_ID;
+      else if (/原神|原石|旅行者|纠缠之缘|原石|旅行者|糾纏之緣/.test(text)) defaultGameId = YUANSHEN_ID;
+      else if (/世界之外|侧影|晶石|側影/.test(text)) defaultGameId = SHIJIE_ID;
+      else if (/未定|律师|晶片|左然|莫弈|陆景和|夏彦|律師|陸景和|夏彥/.test(text)) defaultGameId = WEIDING_ID;
+      else if (/花亦山|学子|名士|金叶子|學子|名士|金葉子/.test(text)) defaultGameId = HUAYISHAN_ID;
+      else if (/夜幕|夜行者|金砖|骰子|夜幕|夜行者|金磚|骰子/.test(text)) defaultGameId = YEMU_ID;
+      else if (/代号鸢|广陵王|殿下|白金|代號鳶|廣陵王|殿下|白金/.test(text)) defaultGameId = DAIHAOYUAN_ID;
 
       if (!defaultGameId) {
         alert('未能识别出属于哪个游戏。请确保文本中包含游戏名或专属词汇。');
@@ -387,66 +387,71 @@ content.addEventListener('click', e => {
 
       const lines = text.split('\n');
       const results = [];
-      let currentActName = '未命名活动';
+      let currentActName = '';
 
       for (let i = 0; i < lines.length; i++) {
         let line = lines[i].trim();
         if (!line) continue;
 
-        // 1. 提取名字（优先取括号内的，如果没有括号且以 ◇ 开头，取后面的文字）
+        // 1. 智能提取名字（兼容繁体）
         let nameMatch = line.match(/[【《「](.*?)[》】」]/);
         if (nameMatch && nameMatch[1]) {
           let n = nameMatch[1].trim();
-          if (n && !/时间|日期|说明|内容/.test(n)) {
-            currentActName = n;
-          }
+          if (n && !/时间|日期|说明|内容|時間|日期|說明|內容/.test(n)) currentActName = n;
         } else if (line.startsWith('◇')) {
           let n = line.replace(/^◇\s*/, '').trim();
-          if (n && !/时间|日期|说明|内容/.test(n)) {
-            currentActName = n;
-          }
+          if (n && !/时间|日期|说明|内容|時間|日期|說明|內容/.test(n)) currentActName = n;
         } else if (/[丨|]/.test(line) && line.length < 30) {
           let parts = line.split(/[丨|]/);
           let best = '';
           parts.forEach(p => {
             p = p.trim();
-            if (p.length > 2 && p.length > best.length && !/情报|公告|更新|开放/.test(p)) best = p;
+            if (p.length > 2 && p.length > best.length && !/情报|公告|更新|开放|情報|公告|更新|開放/.test(p)) best = p;
           });
-          if (best) {
-            currentActName = best.replace(/活动预告|限时活动|活动|预告/g, '').trim();
-          }
+          if (best) currentActName = best.replace(/活动预告|限时活动|活动|预告|活動預告|限時活動|活動|預告/g, '').trim();
+        } else if (i === 0 && line.length < 25 && !/活动|公告|时间|更新|说明|活動|公告|時間|更新|說明/.test(line)) {
+          currentActName = line;
         }
 
-        // 2. 解析时间（排除兑换、关卡等衍生时间）
-        if (/(时间|日期)/.test(line) && !/(兑换|关卡)/.test(line)) {
-          const regex = /(?:(\d{2,4})[年\.\-\/])?(\d{1,2})[月\.\-\/](\d{1,2})[日]?(?:\s*(\d{1,2})[:：](\d{2}))?/g;
-          let matches = [...line.matchAll(regex)];
-          
-          if (matches.length >= 1) {
-            let m1 = matches[0];
-            let y1 = m1[1] ? (m1[1].length === 2 ? '20' + m1[1] : m1[1]) : new Date().getFullYear();
-            let mo1 = m1[2].padStart(2, '0');
-            let d1 = m1[3].padStart(2, '0');
-            let h1 = m1[4] ? m1[4].padStart(2, '0') : gameDefaultTime.split(':')[0];
-            let mi1 = m1[5] ? m1[5] : (m1[4] ? '00' : gameDefaultTime.split(':')[1]);
-            let startStr = `${y1}-${mo1}-${d1}T${h1}:${mi1}`;
-            
-            let endStr = startStr; // 默认结束时间等于开始时间（如果没写的话）
-            
-            if (matches.length >= 2) {
-              let m2 = matches[1];
-              let y2 = m2[1] ? (m2[1].length === 2 ? '20' + m2[1] : m2[1]) : y1;
-              let mo2 = m2[2].padStart(2, '0');
-              let d2 = m2[3].padStart(2, '0');
-              if (!m2[1] && parseInt(mo2) < parseInt(mo1)) y2 = (parseInt(y1) + 1).toString(); // 跨年
-              let h2 = m2[4] ? m2[4].padStart(2, '0') : gameDefaultTime.split(':')[0];
-              let mi2 = m2[5] ? m2[5] : (m2[4] ? '00' : gameDefaultTime.split(':')[1]);
-              endStr = `${y2}-${mo2}-${d2}T${h2}:${mi2}`;
-            }
+        // 2. 解析时间
+        let isRange = /(\d{1,2})[月\.\-\/](\d{1,2})/.test(line) && /[-~至]/.test(line) && !/(兑换|关卡|兌換|關卡)/.test(line);
+        let isMaintenanceEnd = /(维护后(开启|开放)|維護後(開啟|開放))/.test(line) && /(结束|結束)/.test(line) && /(\d{1,2})[月\.\-\/](\d{1,2})/.test(line);
 
-            // 去重：防止同一个活动名字被加多次
-            if (!results.some(r => r.name === currentActName)) {
-              results.push({ gameId: defaultGameId, name: currentActName, start: startStr, end: endStr });
+        if (isRange || isMaintenanceEnd) {
+          const regex = /(?:(\d{4})[年\.\-\/])?(\d{1,2})[月\.\-\/](\d{1,2})[日]?(?:\s*(\d{1,2})[:：](\d{2}))?/g;
+          let rawMatches = [...line.matchAll(regex)];
+          
+          // ★ 核心修复：过滤掉类似 "1-19" 这种没有"月/日"也没有"时:分"且没有4位年份的假日期
+          let matches = rawMatches.filter(m => {
+            let str = m[0];
+            return /[月日]/.test(str) || /[:：]/.test(str) || m[1]; 
+          });
+          
+          if (matches.length >= 2) { // 正常有两个时间
+            let m1 = matches[0], m2 = matches[1];
+            let y1 = m1[1] ? m1[1] : new Date().getFullYear();
+            let startStr = `${y1}-${m1[2].padStart(2, '0')}-${m1[3].padStart(2, '0')}T${m1[4] ? m1[4].padStart(2, '0') : gameDefaultTime.split(':')[0]}:${m1[5] ? m1[5] : (m1[4] ? '00' : gameDefaultTime.split(':')[1])}`;
+            
+            let y2 = m2[1] ? m2[1] : y1;
+            if (!m2[1] && parseInt(m2[2]) < parseInt(m1[2])) y2 = (parseInt(y1) + 1).toString();
+            let endStr = `${y2}-${m2[2].padStart(2, '0')}-${m2[3].padStart(2, '0')}T${m2[4] ? m2[4].padStart(2, '0') : gameDefaultTime.split(':')[0]}:${m2[5] ? m2[5] : (m2[4] ? '00' : gameDefaultTime.split(':')[1])}`;
+
+            let finalName = currentActName || '未命名活动';
+            if (!results.some(r => r.name === finalName)) {
+              results.push({ gameId: defaultGameId, name: finalName, start: startStr, end: endStr });
+            }
+          } else if (matches.length === 1 && isMaintenanceEnd) { 
+            // 只有结束时间（如：将在维护后开启，10月28日23:59结束）
+            let mEnd = matches[0];
+            let today = new Date();
+            let startStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}T${gameDefaultTime}`;
+            
+            let yEnd = mEnd[1] ? mEnd[1] : today.getFullYear();
+            let endStr = `${yEnd}-${mEnd[2].padStart(2, '0')}-${mEnd[3].padStart(2, '0')}T${mEnd[4] ? mEnd[4].padStart(2, '0') : gameDefaultTime.split(':')[0]}:${mEnd[5] ? mEnd[5] : (mEnd[4] ? '00' : gameDefaultTime.split(':')[1])}`;
+
+            let finalName = currentActName || '未命名活动';
+            if (!results.some(r => r.name === finalName)) {
+              results.push({ gameId: defaultGameId, name: finalName, start: startStr, end: endStr });
             }
           }
         }
