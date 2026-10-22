@@ -131,6 +131,22 @@ function renderHome() {
       </div>
     </div>
   `;
+    // ===== AI 智能识别导入 =====
+  const aiImportHtml = `
+    <div class="section-title">🤖 智能识别活动</div>
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-size:12px;color:#999;margin-bottom:10px;line-height:1.6">
+        将官方公告文本复制粘贴到下方，系统会自动提取<b>多个活动的游戏、名称、起止时间</b>。<br>
+        <span style="color:#e8590c">如果只写了日期没写时间，会按该游戏默认维护时间自动补全。</span>
+      </div>
+      <textarea id="aiTextArea" class="inp" style="height:100px;resize:vertical" placeholder="粘贴包含一或多个活动的完整文本..."></textarea>
+      <button class="btn" data-act="aiParse" style="margin-top:10px">✨ 识别提取</button>
+      
+      <!-- 新增：识别结果预览区 -->
+      <div id="aiPreviewArea" style="margin-top:15px"></div>
+    </div>
+  `;
 
-  return eventHtml + payHtml + manageHtml + backupHtml;
+  // 修改最后的 return
+  return aiImportHtml + eventHtml + payHtml + manageHtml + backupHtml;
 }
