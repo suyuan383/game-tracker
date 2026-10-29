@@ -151,6 +151,9 @@ function renderYmGachaTab(d) {
       </div>`;
   }).join('');
 
+  // ★ 新增：计算夜幕之下的抽卡出金统计（连歪上限为 1）
+  const poolStats = renderPoolStatsCards(calcLimitedPoolStats(d.gachaRecords || [], YEMU_POOLS, 1));
+
   const histHtml = records.length ? records.map(r => {
     const poolCfg = YEMU_POOLS.find(p => p.key === r.poolType);
     const poolName = poolCfg ? poolCfg.name : '未知池';
@@ -171,6 +174,9 @@ function renderYmGachaTab(d) {
   return `
     <div class="section-title">📊 当前保底进度</div>
     ${poolCards}
+
+    <!-- ★ 新增：渲染出金统计卡片 -->
+    ${poolStats}
 
     <div class="section-title">✨ 记录出金</div>
     <div class="card hide" id="ymHitForm">
@@ -193,8 +199,8 @@ function renderYmGachaTab(d) {
         <div style="font-size:12px;color:#666;margin-bottom:4px">本次结果</div>
         <select class="inp" id="ymHitUp">
           <option value="up">没歪 (UP)</option>
-<option value="lost">歪了</option>
-<option value="guaranteed">大保底 (未歪)</option>
+          <option value="lost">歪了</option>
+          <option value="guaranteed">大保底 (未歪)</option>
         </select>
       </div>
       <div style="display:flex;gap:8px">
