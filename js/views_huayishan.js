@@ -116,12 +116,20 @@ function renderHyGachaTab(d) {
   if (hyFilterPool && hyFilterPool !== 'all') {
     records = records.filter(r => r.poolType === hyFilterPool);
   }
-  records = filterByListDate([...records].sort((a, b) => (b.date || '').localeCompare(a.date || '')));
+  records = filterByListDate([...records].sort((a, b) => {
+    const d1 = a.date || '', d2 = b.date || '';
+    if (d1 !== d2) return d1.localeCompare(d2);
+    return (a.id || '').localeCompare(b.id || '');
+  }));
   const dateUI = renderListDateUI();
 
   // 统计
   const totalHits = records.length;
-  const upCount = records.filter(r => r.up).length;
+  let upCount = 0;
+  records.forEach(r => {
+    let status = r.up === true ? 'up' : (r.up === false ? 'lost' : r.up);
+    if (status === 'up' || status === 'guaranteed') upCount++;
+  });
   const limitedCount = allRecords.filter(r => r.poolType === 'limited').length;
   const pool100Count = allRecords.filter(r => r.poolType === 'pool100').length;
 
@@ -144,8 +152,9 @@ function renderHyGachaTab(d) {
       <div style="margin-bottom:10px">
         <div style="font-size:12px;color:#666;margin-bottom:4px">结果</div>
         <select class="inp" id="hyHitUp">
-          <option value="1">当期UP</option>
-          <option value="0">歪</option>
+        <option value="up">没歪 (UP)</option>
+<option value="lost">歪了</option>
+<option value="guaranteed">大保底 (未歪)</option>
         </select>
       </div>
       <div style="display:flex;gap:8px">
@@ -158,12 +167,14 @@ function renderHyGachaTab(d) {
   const histHtml = records.length ? records.map(r => {
     const poolCfg = HUAYISHAN_POOLS.find(p => p.key === r.poolType);
     const poolName = poolCfg ? poolCfg.name : '未知池';
+    let status = r.up === true ? 'up' : (r.up === false ? 'lost' : r.up);
+    const upBadge = `<span class="badge ${status === 'lost' ? 'warn' : (status === 'guaranteed' ? 'gold' : 'green')}">${status === 'lost' ? '歪了' : (status === 'guaranteed' ? '大保底' : 'UP')}</span>`;
     return `
       <div class="row">
         <div class="grow" data-act="hyEditHit" data-id="${r.id}" style="cursor:pointer">
           <div class="name">
             ${esc(r.char)}
-            <span class="badge ${r.up?'green':'warn'}">${r.up?'UP':'歪'}</span>
+            ${upBadge}
             <span class="badge">${esc(poolName)}</span>
           </div>
           <div class="sub">${fmtDate(r.date)} · 第 ${r.hitPity} 抽出金 · 点此修改</div>
@@ -334,7 +345,9 @@ function handleHyAction(act, t, d) {
         document.getElementById('hyHitPool').value = rec.poolType || 'limited';
         document.getElementById('hyHitPity').value = rec.hitPity;
         document.getElementById('hyHitChar').value = rec.char || '';
-        document.getElementById('hyHitUp').value = rec.up ? '1' : '0';
+        
+        let status = rec.up === true ? 'up' : (rec.up === false ? 'lost' : rec.up);
+        document.getElementById('hyHitUp').value = status;
       }, 30);
       break;
     }
@@ -343,15 +356,15 @@ function handleHyAction(act, t, d) {
       const poolType = document.getElementById('hyHitPool').value;
       const hitPity = +document.getElementById('hyHitPity').value;
       const char = document.getElementById('hyHitChar').value.trim();
-      const up = document.getElementById('hyHitUp').value === '1';
+      const upStatus = document.getElementById('hyHitUp').value;
       if (!hitPity) { alert('请填第几抽出金'); return; }
       if (!char) { alert('请填卡面名称'); return; }
 
       if (hyHitEditingId) {
         const rec = (d.gachaRecords || []).find(r => r.id === hyHitEditingId);
-        if (rec) { rec.date = date; rec.poolType = poolType; rec.hitPity = hitPity; rec.char = char; rec.up = up; }
+        if (rec) { rec.date = date; rec.poolType = poolType; rec.hitPity = hitPity; rec.char = char; rec.up = upStatus; }
       } else {
-        d.gachaRecords.push({ id: uid(), date, poolType, hitPity, char, up });
+        d.gachaRecords.push({ id: uid(), date, poolType, hitPity, char, up: upStatus });
       }
       saveDB();
       hyShowHitForm = false;

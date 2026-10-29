@@ -109,12 +109,20 @@ function renderWdEventTab(d) { return renderCommonEventTab(d); }
 
 /* ---------- 抽卡页 ---------- */
 function renderWdGachaTab(d) {
-  const records = filterByListDate([...(d.gachaRecords || [])].sort((a, b) => (b.date || '').localeCompare(a.date || '')));
+  const records = filterByListDate([...(d.gachaRecords || [])].sort((a, b) => {
+    const d1 = a.date || '', d2 = b.date || '';
+    if (d1 !== d2) return d1.localeCompare(d2);
+    return (a.id || '').localeCompare(b.id || '');
+  }));
   const dateUI = renderListDateUI();
 
   // 统计
   const totalHits = records.length;
-  const upCount = records.filter(r => r.up).length;
+  let upCount = 0;
+  records.forEach(r => {
+    let status = r.up === true ? 'up' : (r.up === false ? 'lost' : r.up);
+    if (status === 'up' || status === 'guaranteed') upCount++;
+  });
 
   // 表单
   const hitForm = wdShowHitForm ? `
@@ -128,8 +136,9 @@ function renderWdGachaTab(d) {
         <div style="flex:1.6"><div style="font-size:12px;color:#666;margin-bottom:4px">卡面名称</div><input class="inp" id="wdHitChar" placeholder="如 罪与罚"></div>
         <div style="flex:1"><div style="font-size:12px;color:#666;margin-bottom:4px">结果</div>
           <select class="inp" id="wdHitUp">
-            <option value="1">当期UP</option>
-            <option value="0">歪</option>
+            <option value="up">没歪 (UP)</option>
+<option value="lost">歪了</option>
+<option value="guaranteed">大保底 (未歪)</option>
           </select>
         </div>
       </div>
@@ -140,17 +149,21 @@ function renderWdGachaTab(d) {
     </div>` : '';
 
   // 历史
-  const histHtml = records.length ? records.map(r => `
+  const histHtml = records.length ? records.map(r => {
+    let status = r.up === true ? 'up' : (r.up === false ? 'lost' : r.up);
+    const upBadge = `<span class="badge ${status === 'lost' ? 'warn' : (status === 'guaranteed' ? 'gold' : 'green')}">${status === 'lost' ? '歪了' : (status === 'guaranteed' ? '大保底' : 'UP')}</span>`;
+    return `
     <div class="row">
       <div class="grow" data-act="wdEditHit" data-id="${r.id}" style="cursor:pointer">
         <div class="name">
           ${esc(r.char)}
-          <span class="badge ${r.up?'green':'warn'}">${r.up?'UP':'歪'}</span>
+          ${upBadge}
         </div>
         <div class="sub">${fmtDate(r.date)} · 第 ${r.hitPity} 抽出金 · 点此修改</div>
       </div>
       <button class="del" data-act="wdDelHit" data-id="${r.id}">×</button>
-    </div>`).join('') : `<div class="empty">还没有出金记录</div>`;
+    </div>`;
+  }).join('') : `<div class="empty">还没有出金记录</div>`;
 
   return `
     <div class="stats">
@@ -303,7 +316,9 @@ function handleWdAction(act, t, d) {
         document.getElementById('wdHitDate').value = rec.date || todayStr();
         document.getElementById('wdHitPity').value = rec.hitPity;
         document.getElementById('wdHitChar').value = rec.char || '';
-        document.getElementById('wdHitUp').value = rec.up ? '1' : '0';
+        
+        let status = rec.up === true ? 'up' : (rec.up === false ? 'lost' : rec.up);
+        document.getElementById('wdHitUp').value = status;
       }, 30);
       break;
     }
@@ -311,15 +326,15 @@ function handleWdAction(act, t, d) {
       const date = document.getElementById('wdHitDate').value || todayStr();
       const hitPity = +document.getElementById('wdHitPity').value;
       const char = document.getElementById('wdHitChar').value.trim();
-      const up = document.getElementById('wdHitUp').value === '1';
+      const upStatus = document.getElementById('wdHitUp').value;
       if (!hitPity) { alert('请填第几抽出金'); return; }
       if (!char) { alert('请填卡面名称'); return; }
 
       if (wdHitEditingId) {
         const rec = (d.gachaRecords || []).find(r => r.id === wdHitEditingId);
-        if (rec) { rec.date = date; rec.hitPity = hitPity; rec.char = char; rec.up = up; }
+        if (rec) { rec.date = date; rec.hitPity = hitPity; rec.char = char; rec.up = upStatus; }
       } else {
-        d.gachaRecords.push({ id: uid(), date, hitPity, char, up });
+        d.gachaRecords.push({ id: uid(), date, hitPity, char, up: upStatus });
       }
       saveDB();
       wdShowHitForm = false;

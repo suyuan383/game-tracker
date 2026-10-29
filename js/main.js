@@ -536,9 +536,8 @@ content.addEventListener('click', e => {
         const hitPityRaw = document.getElementById('recHitPity').value;
         const hitPity = hitPityRaw ? +hitPityRaw : null;
         const char = document.getElementById('recChar').value.trim();
-        const up = document.getElementById('recUp').value === '1';
-        if (!pullsUsed) { alert('请输入本次投入抽数'); return; }
-        d.gachaRecords.push({ id: uid(), date, poolName, poolStatus, type: 'pull', pullsUsed, hitPity, char, up });
+        const upStatus = document.getElementById('recUp').value; // 获取 'up' / 'lost' / 'guaranteed'
+        d.gachaRecords.push({ id: uid(), date, poolName, poolStatus, type: 'pull', pullsUsed, hitPity, char, up: upStatus });
 
         // ★ 资源消耗联动
         const useRes = document.getElementById('recUseResource');

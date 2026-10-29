@@ -111,7 +111,11 @@ function renderYsEventTab(d) { return renderCommonEventTab(d); }
 /* ---------- 抽卡页 ---------- */
 function renderYsGachaTab(d) {
   const banks = d.gachaBanks || {};
-    const records = filterByListDate([...(d.gachaRecords || [])].sort((a, b) => (b.date || '').localeCompare(a.date || '')));
+    const records = filterByListDate([...(d.gachaRecords || [])].sort((a, b) => {
+    const d1 = a.date || '', d2 = b.date || '';
+    if (d1 !== d2) return d1.localeCompare(d2);
+    return (a.id || '').localeCompare(b.id || '');
+  }));
   const dateUI = renderListDateUI();
 
   const poolCards = YUANSHEN_POOLS.map(pool => {
@@ -147,12 +151,13 @@ function renderYsGachaTab(d) {
         </div>
       </div>`;
   }).join('');
-  const poolStats = renderPoolStatsCards(calcLimitedPoolStats(d.gachaRecords || [], YUANSHEN_POOLS));
+  const poolStats = renderPoolStatsCards(calcLimitedPoolStats(d.gachaRecords || [], YUANSHEN_POOLS, 1));
   const histHtml = records.length ? records.map(r => {
     const poolCfg = YUANSHEN_POOLS.find(p => p.key === r.poolType);
     const poolName = poolCfg ? poolCfg.name : '未知池';
+    let status = r.up === true ? 'up' : (r.up === false ? 'lost' : r.up);
     const upBadge = poolCfg && poolCfg.hasGuaranteed
-      ? `<span class="badge ${r.up ? 'green' : 'warn'}">${r.up ? 'UP' : '歪'}</span>`
+      ? `<span class="badge ${status === 'lost' ? 'warn' : (status === 'guaranteed' ? 'gold' : 'green')}">${status === 'lost' ? '歪了' : (status === 'guaranteed' ? '大保底' : 'UP')}</span>`
       : '';
     return `
       <div class="row">
@@ -190,8 +195,9 @@ function renderYsGachaTab(d) {
       <div id="ysHitUpGroup" style="margin-bottom:10px">
         <div style="font-size:12px;color:#666;margin-bottom:4px">本次结果</div>
         <select class="inp" id="ysHitUp">
-          <option value="1">UP（没歪）</option>
-          <option value="0">歪了</option>
+          <option value="up">没歪 (UP)</option>
+<option value="lost">歪了</option>
+<option value="guaranteed">大保底 (未歪)</option>
         </select>
       </div>
       <div style="display:flex;gap:8px">
@@ -469,7 +475,9 @@ function handleYsAction(act, t, d) {
       document.getElementById('ysHitPoolSel').value = rec.poolType;
       document.getElementById('ysHitPity').value = rec.hitPity;
       document.getElementById('ysHitChar').value = rec.char || '';
-      document.getElementById('ysHitUp').value = rec.up ? '1' : '0';
+
+      let status = rec.up === true ? 'up' : (rec.up === false ? 'lost' : rec.up);
+      document.getElementById('ysHitUp').value = status;
 
       const poolCfg = YUANSHEN_POOLS.find(p => p.key === rec.poolType);
       const upGrp = document.getElementById('ysHitUpGroup');
@@ -493,9 +501,9 @@ function handleYsAction(act, t, d) {
       if (!hitPity) { alert('请填第几抽出金'); return; }
       if (!char) { alert('请填角色/武器名'); return; }
 
-      let isUp = true;
+      let upStatus = 'up';
       if (poolCfg.hasGuaranteed) {
-        isUp = document.getElementById('ysHitUp').value === '1';
+        upStatus = document.getElementById('ysHitUp').value;
       }
 
       const editingId = document.getElementById('ysEditingRecId').value;
@@ -508,17 +516,17 @@ function handleYsAction(act, t, d) {
           rec.poolName = poolCfg.name;
           rec.hitPity = hitPity;
           rec.char = char;
-          rec.up = isUp;
+          rec.up = upStatus;
         }
       } else {
         d.gachaRecords.push({
           id: uid(), date, poolType: poolKey, poolName: poolCfg.name,
-          hitPity, char, up: isUp
+          hitPity, char, up: upStatus
         });
         const bank = d.gachaBanks[poolKey];
         bank.pity = poolCfg.max;
         if (poolCfg.hasGuaranteed) {
-          bank.guaranteed = !isUp;
+          bank.guaranteed = (upStatus === 'lost');
         }
       }
 

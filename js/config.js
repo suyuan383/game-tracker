@@ -156,8 +156,8 @@ const HUAYISHAN_EXPENSE_TYPES = ['抽卡消耗', '其他消耗'];
 
 // 两个卡池
 const HUAYISHAN_POOLS = [
-  { key: 'limited',  name: '限定池' },
-  { key: 'pool100',  name: '100抽池' }
+  { key: 'limited',  name: '限定池', hasGuaranteed: true },
+  { key: 'pool100',  name: '100抽池', hasGuaranteed: true }
 ];
 
 let hyResShowForm = '';

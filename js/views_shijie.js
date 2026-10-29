@@ -135,7 +135,9 @@ function renderSjGachaTab(d) {
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <div style="flex:${isPerm?'1':'1.4'}"><div style="font-size:12px;color:#666;margin-bottom:4px">角色名</div><input class="inp" id="sjHitChar" placeholder="如 顾时夜"></div>
         ${isPerm ? '' : `<div style="flex:1"><div style="font-size:12px;color:#666;margin-bottom:4px">结果</div>
-          <select class="inp" id="sjHitUp"><option value="1">UP</option><option value="0">歪</option></select>
+          <select class="inp" id="sjHitUp"><option value="up">没歪 (UP)</option>
+<option value="lost">歪了</option>
+<option value="guaranteed">大保底 (未歪)</option></select>
         </div>`}
       </div>
       <div style="display:flex;gap:8px">
@@ -207,7 +209,11 @@ function renderSjGachaTab(d) {
       ${cards}`;
   } else {
     // 当前卡池抽卡记录
-  const hist = filterByListDate([...(pool.history || [])].sort((a, b) => (b.date || '').localeCompare(a.date || '')));
+  const hist = filterByListDate([...(pool.history || [])].sort((a, b) => {
+    const d1 = a.date || '', d2 = b.date || '';
+    if (d1 !== d2) return d1.localeCompare(d2);
+    return (a.id || '').localeCompare(b.id || '');
+  }));
   const dateUI = renderListDateUI();
     const histHtml = hist.length ? hist.map(h => {
       if (h.type === 'reward') {
@@ -220,7 +226,8 @@ function renderSjGachaTab(d) {
             <button class="del" data-act="sjDelHist" data-id="${h.id}">×</button>
           </div>`;
       }
-      const upBadge = isPerm ? '' : `<span class="badge ${h.up?'green':'warn'}">${h.up?'UP':'歪'}</span>`;
+      let status = h.up === true ? 'up' : (h.up === false ? 'lost' : h.up);
+      const upBadge = isPerm ? '' : `<span class="badge ${status === 'lost' ? 'warn' : (status === 'guaranteed' ? 'gold' : 'green')}">${status === 'lost' ? '歪了' : (status === 'guaranteed' ? '大保底' : 'UP')}</span>`;
       return `
         <div class="row">
           <div class="grow" data-act="sjEditHit" data-id="${h.id}" style="cursor:pointer">
@@ -514,7 +521,10 @@ function handleSjAction(act, t, d) {
         const charEl = document.getElementById('sjHitChar');
         if (charEl) charEl.value = rec.char || '';
         const upEl = document.getElementById('sjHitUp');
-        if (upEl) upEl.value = rec.up ? '1' : '0';
+        if (upEl) {
+          let status = rec.up === true ? 'up' : (rec.up === false ? 'lost' : rec.up);
+          upEl.value = status;
+        }
       }, 50);
       break;
     }
@@ -523,21 +533,21 @@ function handleSjAction(act, t, d) {
       const date = document.getElementById('sjHitDate').value || todayStr();
       const hitPity = +document.getElementById('sjHitPity').value;
       const char = document.getElementById('sjHitChar').value.trim();
-      let up = true;
+      let upStatus = 'up';
       if (!isPerm) {
         const upEl = document.getElementById('sjHitUp');
-        if (upEl) up = upEl.value === '1';
+        if (upEl) upStatus = upEl.value;
       }
       if (!hitPity || !char) { alert('请填写完整'); return; }
       const editingId = document.getElementById('sjHitEditingId').value;
       if (editingId) {
         const rec = (pool.history || []).find(h => h.id === editingId);
-        if (rec) { rec.date = date; rec.hitPity = hitPity; rec.char = char; rec.up = up; }
+        if (rec) { rec.date = date; rec.hitPity = hitPity; rec.char = char; rec.up = upStatus; }
       } else {
-        pool.history.push({ id: uid(), type: 'hit', date, hitPity, char, up });
+        pool.history.push({ id: uid(), type: 'hit', date, hitPity, char, up: upStatus });
         pool.pityLeft = pool.maxPity;
         if (!isPerm) {
-          pool.guaranteed = !up;
+          pool.guaranteed = (upStatus === 'lost');
         }
       }
       saveDB(); sjShowHitForm = false; render(false);

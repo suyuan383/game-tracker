@@ -22,12 +22,12 @@ function renderGachaTab(d) {
   let filtered = records;
   if (gachaFilterPool) filtered = filtered.filter(r => r.poolName === gachaFilterPool);
 
-  // ===== 排序 =====
+  // ===== 排序（正序：旧的在上，新的在下）=====
   filtered = [...filtered].sort((a, b) => {
     const d1 = a.date || '';
     const d2 = b.date || '';
-    if (d1 !== d2) return d2.localeCompare(d1);
-    return (b.id || '').localeCompare(a.id || '');
+    if (d1 !== d2) return d1.localeCompare(d2);
+    return (a.id || '').localeCompare(b.id || '');
   });
 
   // ===== 日期筛选 =====
@@ -41,7 +41,8 @@ function renderGachaTab(d) {
   } else if (gachaGroupBy === 'time') {
     const groups = {};
     filtered.forEach(r => { const key = r.date || '未知日期'; if (!groups[key]) groups[key] = []; groups[key].push(r); });
-    const dates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+    // 日期正序
+    const dates = Object.keys(groups).sort((a, b) => a.localeCompare(b));
     listHtml = dates.map(date => {
       const items = groups[date];
       const dayPulls = items.filter(r => r.type === 'pull').reduce((s, r) => s + (+r.pullsUsed || 0), 0);
@@ -113,7 +114,7 @@ function renderGachaTab(d) {
         </div>
         <div style="display:flex;gap:8px;margin-bottom:10px">
           <div style="flex:1.4"><div style="font-size:12px;color:#666;margin-bottom:4px">出金角色（可留空）</div><input class="inp" id="recChar" placeholder="如 路辰·诡念"></div>
-          <div style="flex:1"><div style="font-size:12px;color:#666;margin-bottom:4px">UP/歪</div><select class="inp" id="recUp"><option value="1">UP</option><option value="0">歪</option></select></div>
+          <div style="flex:1"><div style="font-size:12px;color:#666;margin-bottom:4px">结果</div><select class="inp" id="recUp"><option value="up">UP</option><option value="lost">歪了</option><option value="guaranteed">大保底</option></select></div>
         </div>
         <div style="margin-top:10px;padding:10px;border-radius:8px;background:#f8f9fa">
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
@@ -152,8 +153,9 @@ function renderRecordRow(r, hideDate) {
     const rewardLabel = r.rewardType || '绘制奖励';
     return `<div class="row"><div class="grow"><div class="name">🎁 <span class="badge gold">绘制奖励·${esc(rewardLabel)}</span>${r.char ? ` → ${esc(r.char)}` : ''}</div><div class="sub">${hideDate ? '' : `${fmtDate(r.date)} · `}${esc(r.poolName || '')} · ${esc(r.poolStatus || '')}</div></div><button class="del" data-act="delRec" data-id="${r.id}">×</button></div>`;
   }
+  let status = r.up === true ? 'up' : (r.up === false ? 'lost' : r.up);
   const hitInfo = r.hitPity ? `第 ${r.hitPity} 抽出金` : '未出金';
-  const badge = r.hitPity ? `<span class="badge ${r.up ? 'green' : 'warn'}">${r.up ? 'UP' : '歪'}</span>` : `<span class="badge over">未出</span>`;
+  const badge = r.hitPity ? `<span class="badge ${status === 'lost' ? 'warn' : (status === 'guaranteed' ? 'gold' : 'green')}">${status === 'lost' ? '歪了' : (status === 'guaranteed' ? '大保底' : 'UP')}</span>` : `<span class="badge over">未出</span>`;
   return `<div class="row"><div class="grow"><div class="name">${r.char ? esc(r.char) : '（无）'} ${badge}${r.poolStatus ? `<span class="badge">${esc(r.poolStatus)}</span>` : ''}</div><div class="sub">${hideDate ? '' : `${fmtDate(r.date)} · `}${esc(r.poolName || '')} · 投入 ${r.pullsUsed} 抽 · ${hitInfo}</div></div><button class="del" data-act="delRec" data-id="${r.id}">×</button></div>`;
 }
 

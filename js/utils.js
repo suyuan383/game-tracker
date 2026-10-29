@@ -115,7 +115,6 @@ function renderCommonEventTab(d) {
 }
 
 function renderEventRow(ev) {
-  // ===== 已完成：灰化 + 撤销按钮，不显示倒计时 =====
   if (ev.done) {
     return `
       <div class="row ev-done">
@@ -129,7 +128,6 @@ function renderEventRow(ev) {
       </div>`;
   }
 
-  // ===== 未完成：正常倒计时 + 完成按钮 =====
   let badge = '';
   if (ev._st === 'ended') {
     badge = `<span class="badge over">已结束</span>`;
@@ -283,37 +281,46 @@ function renderListDateUI() {
       <button class="mini" data-act="listDateAll" style="${isAll?'background:#3b5bdb;color:#fff':''}">全部</button>
     </div>`;
 }
+
 /* ===================== 限定池出金统计 ===================== */
-function calcLimitedPoolStats(records, pools) {
+/* ===================== 限定池出金统计 ===================== */
+function calcLimitedPoolStats(records, pools, maxLost = 1) {
   return pools.filter(p => p.hasGuaranteed).map(p => {
-    // 按时间正序（从旧到新）遍历，才能正确跟踪大小保底状态
     const recs = (records || [])
-      .filter(r => r.poolType === p.key)
+      .filter(r => r.poolType === p.key || r.poolName === p.name)
       .sort((a, b) => {
         const d1 = a.date || '', d2 = b.date || '';
         if (d1 !== d2) return d1.localeCompare(d2);
         return (a.id || '').localeCompare(b.id || '');
       });
 
-    let guaranteed = false;   // 是否处于大保底状态
-    let smallTotal = 0;       // 小保底总次数
-    let smallUp = 0;          // 小保底命中次数
-    let upCount = 0;          // UP 总数（含大保底）
-    let totalPulls = 0;       // 所有出金累计抽数
+    let guaranteed = false;   
+    let smallTotal = 0;       
+    let smallUp = 0;          
+    let upCount = 0;          
+    let totalPulls = 0;       
+    let consecLost = 0;       
 
     recs.forEach(r => {
       totalPulls += (+r.hitPity || 0);
-      if (r.up) upCount++;
+      let status = r.up === true ? 'up' : (r.up === false ? 'lost' : r.up);
 
-      if (guaranteed) {
-        // 大保底出金，必UP，不计入概率统计
-        guaranteed = false;
-      } else {
-        smallTotal++;
-        if (r.up) {
-          smallUp++;
+      if (status === 'up' || status === 'guaranteed') {
+        upCount++;
+        if (guaranteed) {
+          // 大保底出金，不计入小保底统计
         } else {
-          guaranteed = true;   // 歪了，进入大保底
+          smallTotal++;
+          smallUp++;
+        }
+        consecLost = 0;
+        guaranteed = false;
+      } else if (status === 'lost') {
+        // ★ 核心修复：只要歪了，就是一次小保底尝试，必须增加小保底总次数
+        smallTotal++;
+        consecLost++;
+        if (consecLost >= maxLost) {
+          guaranteed = true;
         }
       }
     });
